@@ -183,29 +183,95 @@ module.exports = (function() {
 
             return this._public(url,parameters, callback);
         },
-        getDepth: function(currencyA,currencyB,callback){
+        getAllTickers : function(callback){
+            return this._public("/tickers.json",{},callback);
+        },
+        getDepth: function(currencyA,currencyB,mLimit,callback){
             var parameters = {
-                market: joinCurrencies(currencyA, currencyB)            };
+                market: joinCurrencies(currencyA, currencyB),
+                limit : mLimit ? mLimit : 300
+            };
 
             return this._public('/depth.json',parameters, callback);
         },
-        getOrderBook: function(currencyA, currencyB, callback){
+        getOrderBook: function(currencyA, currencyB,askLimit, bidLimit, callback){
             var parameters = {
-                market: joinCurrencies(currencyA, currencyB)
+                market: joinCurrencies(currencyA, currencyB),
+                asks_limit : askLimit ? askLimit : 20,
+                bids_limit : bidLimit ? bidLimit : 20
             };
 
             return this._public('/order_book.json', parameters, callback);
         },
+        getMarkets : function(callback){
+            return this._public("/markets.json",{},callback);
+        },
 
 
-        /////
 
 
-        // PRIVATE METHODS
+
+        //// PRIVATE GET
+
+
+        getMember : function(callback){
+            var url = "/members/me.json";
+            return this._privateGet(url,{},callback);
+        },
+         getAllDeposits : function(InCurrency,InLimit, InState,callback){
+            var param = {
+                currency : InCurrency,
+                limit : InLimit ? InLimit : 100,
+                state : InState ? InState : "wait"
+            }
+             return this._privateGet("/deposits.json",param,callback);
+        },
+        getDeposit : function(transaction, callback){
+            var param = {
+                txid : transaction
+            }
+            return this._privateGet("/deposit.json",param,callback);
+        },
+        getDepositAddress : function(InCurrency, callback){
+            var param = {
+                currency  : InCurrency
+            }
+            return this._privateGet("/deposit_address.json",param,callback);
+        },
+        getAllOrders : function(currencyA, currencyB, mState, mLimit, mPage, mOrderBy, callback){
+            var param = {
+                state : mState ? mState : "wait",
+                limit : mLimit ? mLimit : 100,
+                page : mPage,
+                order_by : mOrderBy? mOrderBy : 'asc',
+                market : joinCurrencies(currencyA,currencyB)
+            }
+
+            return this._privateGet("/orders.json",param,callback);
+
+        },
+        getOrder : function(orderId,callback){
+            var param = { id : orderId}
+            return this._privateGet("/orders.json",param, callback);
+        },
 
         myBalances: function(key,secret,callback){
             return this._privateGet('/members/me.json',key,secret, callback);
         },
+
+        getRecentTrade : function(currencyA, currencyB, mLimit, Timestamp, From, To, Orderby,callback){
+            var param = {
+                market : joinCurrencies(currencyA,currencyB),
+                limit : mLimit ? mLimit : 50,
+                timestamp : Timestamp ? Timestamp : null
+            } //TODO need to be done
+        },
+
+
+
+
+
+        /////PRIVATE POST
 
         buy: function(currencyA, currencyB, rate, amount,key,secret, callback){
             var parameters = {
@@ -227,6 +293,23 @@ module.exports = (function() {
             };
 
             return this._privatePost('/orders.json', parameters,key,secret, callback);
+        },
+
+        cancelAllOrder : function(mSide, callback){
+            if(side){
+                var param = {
+                    side : mSide
+                }
+                return this._privatePost("orders/clear.json",param,callback);
+            }
+            else{
+                return this._privatePost("orders/clear.json",{},callback);
+            }
+        },
+
+        cancelOrder : function(orderId,callback){
+            var param = { id : orderId}
+            return this._privatePost("/order/delete.json",param,callback);
         }
 
 
