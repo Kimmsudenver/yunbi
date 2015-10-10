@@ -21,6 +21,7 @@ module.exports = (function() {
         API_URL  = 'https://yunbi.com:443//api/v2',
         HASH_URL = '/api/v2',
         USER_AGENT      = 'yunbi.js ' + version;
+    var errorMsg = "Missing Params";
     //USER_AGENT    = 'Mozilla/5.0 (Windows NT 6.3; WOW64; rv:26.0) Gecko/20100101 Firefox/26.0'
 
 
@@ -37,6 +38,13 @@ module.exports = (function() {
     function sortParameters(a, b){return 0;
         // Sort `nonce` parameter last, and the rest alphabetically
         return a === 'nonce' || a > b ? 1 : -1;
+    }
+
+    function cleanUpParam(param){
+        for (var key in param){
+            if(param[key] == null)
+                delete param[key];
+        }
     }
 
 
@@ -176,35 +184,78 @@ module.exports = (function() {
         // PUBLIC METHODS
 
         getTicker: function(A,B,callback){
-            var parameters = {
-                market: joinCurrencies(A, B)
-            };
-            var url ='/tickers/'+joinCurrencies(A,B) + '.json'
+            if(!A  || !B)
+                callback (errorMsg, null);
+            else {
+                var parameters = {
+                    market: joinCurrencies(A, B)
+                };
+                var url = '/tickers/' + joinCurrencies(A, B) + '.json'
 
-            return this._public(url,parameters, callback);
+                return this._public(url, parameters, callback);
+            }
         },
         getAllTickers : function(callback){
             return this._public("/tickers.json",{},callback);
         },
-        getDepth: function(currencyA,currencyB,mLimit,callback){
-            var parameters = {
-                market: joinCurrencies(currencyA, currencyB),
-                limit : mLimit ? mLimit : 300
-            };
+        getDepth: function(currencyA,currencyB,mLimit,callback) {
+            if (!currencyA || !currencyB)
+                callback(errorMsg, null);
+            else {
+                var parameters = {
+                    market: joinCurrencies(currencyA, currencyB),
+                    limit: mLimit ? mLimit : 300
+                };
 
-            return this._public('/depth.json',parameters, callback);
+            return this._public('/depth.json', parameters, callback);
+            }
         },
         getOrderBook: function(currencyA, currencyB,askLimit, bidLimit, callback){
-            var parameters = {
-                market: joinCurrencies(currencyA, currencyB),
-                asks_limit : askLimit ? askLimit : 20,
-                bids_limit : bidLimit ? bidLimit : 20
-            };
+            if(!currencyA  || !currencyB)
+                callback(errorMsg,null);
+            else {
+                var parameters = {
+                    market: joinCurrencies(currencyA, currencyB),
+                    asks_limit: askLimit ? askLimit : 20,
+                    bids_limit: bidLimit ? bidLimit : 20
+                };
 
-            return this._public('/order_book.json', parameters, callback);
+                return this._public('/order_book.json', parameters, callback);
+            }
         },
         getMarkets : function(callback){
             return this._public("/markets.json",{},callback);
+        },
+        getTimeStamp : function(callback){
+            return this._public("/timestamp.json",{},callback);
+        },
+        getK : function(currencyA,currencyB,Limit, Period,Timestamp,callback){
+            if(!currencyA || !currencyB)
+                callback(errorMsg,null);
+            else {
+                var param = {
+                    market: joinCurrencies(currencyA, currencyB),
+                    limit: Limit ? Limit : null,
+                    period: Period ? Period : null,
+                    timestamp: Timestamp ? Timestamp : null
+                }
+                cleanUpParam(param);
+                return this._public("/k.json", param, callback);
+            }
+        },
+        KPendingTrades : function (currencyA,currencyB, tradeId, Limit,Period,Timestamp,callback){
+            if(!currencyA || !currencyB || !tradeId)
+                callback(errorMsg,null);
+            else {
+                var param = {
+                    market: joinCurrencies(currencyA, currencyB),
+                    trade_id: tradeId,
+                    period: Period ? Period : null,
+                    timestamp: Timestamp ? Timestamp : null
+                }
+                cleanUpParam(param);
+                return this._public("/k_with_pending_trades.json", param, callback);
+            }
         },
 
 
@@ -219,24 +270,37 @@ module.exports = (function() {
             return this._privateGet(url,{},callback);
         },
          getAllDeposits : function(InCurrency,InLimit, InState,callback){
-            var param = {
-                currency : InCurrency,
-                limit : InLimit ? InLimit : 100,
-                state : InState ? InState : "wait"
-            }
-             return this._privateGet("/deposits.json",param,callback);
+             if(!InCurrency)
+                callback(errorMsg,null)
+             else {
+                 var param = {
+                     currency: InCurrency,
+                     limit: InLimit ? InLimit : 100,
+                     state: InState ? InState : "wait"
+                 }
+                 return this._privateGet("/deposits.json", param, callback);
+             }
         },
         getDeposit : function(transaction, callback){
-            var param = {
-                txid : transaction
+            if(!transaction)
+                callback(errorMsg,null)
+            else {
+                var param = {
+                    txid: transaction
+                }
+                return this._privateGet("/deposit.json", param, callback);
             }
-            return this._privateGet("/deposit.json",param,callback);
         },
         getDepositAddress : function(InCurrency, callback){
-            var param = {
-                currency  : InCurrency
+            if(!InCurrency){
+                callback(errorMsg,null)
             }
-            return this._privateGet("/deposit_address.json",param,callback);
+            else {
+                var param = {
+                    currency: InCurrency
+                }
+                return this._privateGet("/deposit_address.json", param, callback);
+            }
         },
         getAllOrders : function(currencyA, currencyB, mState, mLimit, mPage, mOrderBy, callback){
             var param = {
@@ -263,8 +327,25 @@ module.exports = (function() {
             var param = {
                 market : joinCurrencies(currencyA,currencyB),
                 limit : mLimit ? mLimit : 50,
-                timestamp : Timestamp ? Timestamp : null
-            } //TODO need to be done
+                timestamp : Timestamp ? Timestamp : null,
+                from : From ? From : null,
+                to : To ? To : null,
+                order_by : Orderby  ? Orderby : "desc"
+            }
+            cleanUpParam(param);
+            return this._privateGet("/trades.json",param,callback);
+        },
+        getMyTrades :  function(currencyA, currencyB, mLimit, Timestamp, From, To, Orderby,callback){
+            var param = {
+                market : joinCurrencies(currencyA,currencyB),
+                limit : mLimit ? mLimit : 50,
+                timestamp : Timestamp ? Timestamp : null,
+                from : From ? From : null,
+                to : To ? To : null,
+                order_by : Orderby  ? Orderby : "desc"
+            }
+            cleanUpParam(param)
+            return this._privateGet("/trades/my.json",param,callback);
         },
 
 
