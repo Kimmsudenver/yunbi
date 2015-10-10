@@ -1,0 +1,8 @@
+{
+  "name": "yunbi-api",
+  "version": "0.0.1",
+  "author" : "Kim Bui",
+  "request" : "~2.64.0",
+  "crypto" : "~0.0.3",
+  "nonce" : "~1.0.3"
+}
