@@ -15,6 +15,7 @@ module.exports = (function() {
         nonce   = require('nonce')();
      var  Gkey=''
     var Gsign='' //global var, FIXME should use one from constructor
+    var GSecret = '';
 
     // Constants
     var version         = '0.0.6',
@@ -50,6 +51,8 @@ module.exports = (function() {
 
     // Constructor
     function Yunbi(key, secret){
+        Gkey = key;
+        GSecret = secret;
         // Generate headers signed by this user's key and secret.
         // The secret is encapsulated and never exposed
         this._getPrivateHeaders = function(parameters,link){
@@ -71,6 +74,7 @@ module.exports = (function() {
 
             Gkey = key
             Gsign = signature
+            GSecret = secret
             return {
                 Key: key,
                 Sign: signature
@@ -123,7 +127,7 @@ module.exports = (function() {
         },
 
         // Make a private API request POST
-        _privatePost: function(link, parameters,key,secret, callback){
+        _privatePost: function(link, parameters, callback){
             var options;
 
             if (typeof parameters === 'function'){
@@ -133,7 +137,7 @@ module.exports = (function() {
 
             parameters || (parameters = {});
             parameters.tonce = nonce()/100;
-            parameters.access_key = key
+            parameters.access_key = Gkey
             var  paramString = Object.keys(parameters).sort(parameters).map(function(param){
                 return encodeURIComponent(param) + '=' + encodeURIComponent(parameters[param]);
             }).join('&');
@@ -155,19 +159,19 @@ module.exports = (function() {
         },
 /////
         // Make a private API request GET
-        _privateGet: function(link,key,secret ,callback){
+        _privateGet: function(link,callback){
             var options;
             var url = "GET|"+HASH_URL+link+"|"
 
            var parameters= {}
-            parameters.access_key = key
+            parameters.access_key = Gkey
             parameters.tonce = parseInt(nonce()/100 );
 
            var  paramString = Object.keys(parameters).sort(parameters).map(function(param){
                    return encodeURIComponent(param) + '=' + encodeURIComponent(parameters[param]);
                }).join('&');
 
-            var signature = crypto.createHmac('sha256', secret).update(url+paramString).digest('hex');
+            var signature = crypto.createHmac('sha256', GSecret).update(url+paramString).digest('hex');
             parameters.signature=signature
             paramString = paramString +"&"+encodeURIComponent('signature') + "=" + encodeURIComponent(signature)
             options = {
@@ -185,7 +189,7 @@ module.exports = (function() {
 
         getTicker: function(A,B,callback){
             if(!A  || !B)
-                callback (errorMsg, null);
+              return  callback (errorMsg, null);
             else {
                 var parameters = {
                     market: joinCurrencies(A, B)
@@ -200,7 +204,7 @@ module.exports = (function() {
         },
         getDepth: function(currencyA,currencyB,mLimit,callback) {
             if (!currencyA || !currencyB)
-                callback(errorMsg, null);
+               return callback(errorMsg, null);
             else {
                 var parameters = {
                     market: joinCurrencies(currencyA, currencyB),
@@ -212,7 +216,7 @@ module.exports = (function() {
         },
         getOrderBook: function(currencyA, currencyB,askLimit, bidLimit, callback){
             if(!currencyA  || !currencyB)
-                callback(errorMsg,null);
+               return callback(errorMsg,null);
             else {
                 var parameters = {
                     market: joinCurrencies(currencyA, currencyB),
@@ -231,7 +235,7 @@ module.exports = (function() {
         },
         getK : function(currencyA,currencyB,Limit, Period,Timestamp,callback){
             if(!currencyA || !currencyB)
-                callback(errorMsg,null);
+               return callback(errorMsg,null);
             else {
                 var param = {
                     market: joinCurrencies(currencyA, currencyB),
@@ -245,7 +249,7 @@ module.exports = (function() {
         },
         KPendingTrades : function (currencyA,currencyB, tradeId, Limit,Period,Timestamp,callback){
             if(!currencyA || !currencyB || !tradeId)
-                callback(errorMsg,null);
+             return   callback(errorMsg,null);
             else {
                 var param = {
                     market: joinCurrencies(currencyA, currencyB),
@@ -271,7 +275,7 @@ module.exports = (function() {
         },
          getAllDeposits : function(InCurrency,InLimit, InState,callback){
              if(!InCurrency)
-                callback(errorMsg,null)
+               return callback(errorMsg,null)
              else {
                  var param = {
                      currency: InCurrency,
@@ -283,7 +287,7 @@ module.exports = (function() {
         },
         getDeposit : function(transaction, callback){
             if(!transaction)
-                callback(errorMsg,null)
+               return callback(errorMsg,null)
             else {
                 var param = {
                     txid: transaction
@@ -293,7 +297,7 @@ module.exports = (function() {
         },
         getDepositAddress : function(InCurrency, callback){
             if(!InCurrency){
-                callback(errorMsg,null)
+               return callback(errorMsg,null)
             }
             else {
                 var param = {
@@ -303,10 +307,13 @@ module.exports = (function() {
             }
         },
         getAllOrders : function(currencyA, currencyB, mState, mLimit, mPage, mOrderBy, callback){
+            if(!currencyA || !currencyB ){
+               return callback(errorMsg,null);
+            }
             var param = {
                 state : mState ? mState : "wait",
                 limit : mLimit ? mLimit : 100,
-                page : mPage,
+                page : mPage ? mPage  : 0 ,
                 order_by : mOrderBy? mOrderBy : 'asc',
                 market : joinCurrencies(currencyA,currencyB)
             }
@@ -315,15 +322,20 @@ module.exports = (function() {
 
         },
         getOrder : function(orderId,callback){
+            if(!orderId)
+               return callback(errorMsg,null);
             var param = { id : orderId}
             return this._privateGet("/orders.json",param, callback);
         },
 
-        myBalances: function(key,secret,callback){
-            return this._privateGet('/members/me.json',key,secret, callback);
+        myBalances: function(callback){
+            return this._privateGet('/members/me.json',callback);
         },
 
         getRecentTrade : function(currencyA, currencyB, mLimit, Timestamp, From, To, Orderby,callback){
+            if(!currencyA || !currencyB){
+              return  callback(errorMsg,null);
+            }
             var param = {
                 market : joinCurrencies(currencyA,currencyB),
                 limit : mLimit ? mLimit : 50,
@@ -336,6 +348,9 @@ module.exports = (function() {
             return this._privateGet("/trades.json",param,callback);
         },
         getMyTrades :  function(currencyA, currencyB, mLimit, Timestamp, From, To, Orderby,callback){
+            if(!currencyA || !currencyB){
+               return callback(errorMsg,null);
+            }
             var param = {
                 market : joinCurrencies(currencyA,currencyB),
                 limit : mLimit ? mLimit : 50,
@@ -355,6 +370,9 @@ module.exports = (function() {
         /////PRIVATE POST
 
         buy: function(currencyA, currencyB, rate, amount,key,secret, callback){
+            if(!currencyA || !currencyB || !rate || !amount){
+               return callback(errorMsg,null);
+            }
             var parameters = {
                 market: joinCurrencies(currencyA, currencyB),
                 price: rate,
@@ -362,22 +380,28 @@ module.exports = (function() {
                 side : 'buy'
             };
 
-            return this._privatePost('/orders.json', parameters,key,secret, callback);
+            return this._privatePost('/orders.json', parameters, callback);
         },
 
-        sell: function(currencyA, currencyB, rate, amount, key,secret, callback){
-            var parameters = {
-                market: joinCurrencies(currencyA, currencyB),
-                price: rate,
-                volume: amount,
-                side : 'sell'
-            };
+        sell: function(currencyA, currencyB, rate, amount, callback){
+            if(!currencyA || !currencyB || !rate || !amount){
+               return callback(errorMsg,null);
+            }
+            else {
+                var parameters = {
+                    market: joinCurrencies(currencyA, currencyB),
+                    price: rate,
+                    volume: amount,
+                    side: 'sell'
+                };
 
-            return this._privatePost('/orders.json', parameters,key,secret, callback);
+                return this._privatePost('/orders.json', parameters, callback);
+            }
         },
 
         cancelAllOrder : function(mSide, callback){
-            if(side){
+
+            if(mSide){
                 var param = {
                     side : mSide
                 }
@@ -389,8 +413,13 @@ module.exports = (function() {
         },
 
         cancelOrder : function(orderId,callback){
-            var param = { id : orderId}
-            return this._privatePost("/order/delete.json",param,callback);
+            if(!orderId){
+                return callback(errorMsg,null);
+            }
+            else {
+                var param = {id: orderId}
+                return this._privatePost("/order/delete.json", param, callback);
+            }
         }
 
 
