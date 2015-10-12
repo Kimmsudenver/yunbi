@@ -369,7 +369,7 @@ module.exports = (function() {
 
         /////PRIVATE POST
 
-        buy: function(currencyA, currencyB, rate, amount,key,secret, callback){
+        buy: function(currencyA, currencyB, rate, amount, callback){
             if(!currencyA || !currencyB || !rate || !amount){
                return callback(errorMsg,null);
             }
@@ -399,7 +399,7 @@ module.exports = (function() {
             }
         },
 
-        cancelAllOrder : function(mSide, callback){
+        cancelAllOrders : function(mSide, callback){
 
             if(mSide){
                 var param = {
