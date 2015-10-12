@@ -13,24 +13,24 @@ Open source developed Nodejs API for the exchange market www.yunbi.com
 
  - client.getTicker( callback );
  - client.getAllTickers( callback );
- - client.getOrderBook( coinA, coinB, askLimit(*), bitLimit(*),callback );
+ - client.getOrderBook( coinA, coinB, askLimit*, bitLimit*,callback );
  - client.getDepth( coinA, coinB,callback );
  - client.getMarkets( callback );
  - client.getTimeStamp( callback );
- - client.getK( coinA, coinB, limit, period, timestamp, callback );
- - client.KPendingTrades( coinA, coinB, tradeId, limit, period, timestamp,callback );
+ - client.getK( coinA, coinB, limit*, period*, timestamp*, callback );
+ - client.KPendingTrades( coinA, coinB, tradeId, limit*, period*, timestamp*,callback );
 
  # Private Get
 
  - client.getMember( callback );
- - client.getAllDeposits( coin, limit, state, callback );
+ - client.getAllDeposits( coin, limit*, state*, callback );
  - client.getDeposit( transactionId, callback );
  - client.getDepositAddress( coin, callback );
- - client.getAllOrders( coinA, coinB, state(*), limit(*), page(*), orderBy(*), callback );
+ - client.getAllOrders( coinA, coinB, state*, limit*, page*, orderBy*, callback );
  - client.getOrder( orderId, callback );
  - client.myBalances( callback );
- - client.getRecentTrade( coinA, coinB, limit(*), timestamp(*), from(*), to(*), orderBy(*), callback );
- - client.getMyTrades( coinA, coinB,limit(*), timestamp(*), from(*), to(*), orderBy(*), callback );
+ - client.getRecentTrade( coinA, coinB, limit*, timestamp*, from*, to*, orderBy*, callback );
+ - client.getMyTrades( coinA, coinB,limit*, timestamp*, from*, to*, orderBy*, callback );
 
  # Private Post
 
@@ -40,6 +40,8 @@ Open source developed Nodejs API for the exchange market www.yunbi.com
  - client.cancelOrder( orderId, callback );
 
 
+
+* : optional param, pass in null if not specified.
 
 
 Buy me a cup of coffee for late night coding? Thank you for your support :)
