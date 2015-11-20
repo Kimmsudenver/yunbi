@@ -1,8 +1,20 @@
 {
   "name": "yunbi-api",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "author" : "Kim Bui",
-  "request" : "~2.64.0",
-  "crypto" : "~0.0.3",
-  "nonce" : "~1.0.3"
+  "license" : "MIT",
+  "repository":{
+    "type" : "git",
+    "url"  : "https://github.com/Kimmsudenver/yunbi"
+  },
+  "dependencies":
+  {
+    "request" : "~2.64.0",
+    "crypto" : "~0.0.3",
+    "nonce" : "~1.0.3"
+  },
+  "bugs" : {
+    "url"  : "https://github.com/Kimmsudenver/yunbi",
+    "email" : "kbuimscd@gmail.com"
+  }
 }
